@@ -43,7 +43,12 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
-    steps:
+    steps:    
+    - name: Checkout tools repo
+      uses: actions/checkout@v2
+      with:
+        repository: superstack-dev/superstack-service
+
     - name: Checkout
       uses: actions/checkout@v2
 
