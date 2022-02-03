@@ -28,7 +28,7 @@ name: Deploy Service to Amazon ECS
 on:
   workflow_call:
     inputs:
-        service_name:
+      service_name:
           required: true
           type: string
       secrets:
