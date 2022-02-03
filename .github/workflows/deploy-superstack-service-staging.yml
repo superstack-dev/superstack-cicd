@@ -52,7 +52,7 @@ jobs:
         repository: superstack-dev/superstack-service
         ref: staging
         token: ${{ secrets.SUPERSTACK_SERVICE_TOKEN }}
-        path: $GITHUB_WORKSPACE
+        path: ${{ github.workspace }}
 
     - name: Checkout
       uses: actions/checkout@v2
@@ -79,7 +79,7 @@ jobs:
         # push it to ECR so that it can
         # be deployed to ECS.
         echo $GITHUB_WORKSPACE
-        ls -la
+        ls -laR
         docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
