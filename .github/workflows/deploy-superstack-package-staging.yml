@@ -29,10 +29,7 @@ jobs:
         run: pip install -U bumpversion build
 
       - name: Set Current Version
-        run: git tag --sort=committerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --new-version {}
-
-      - name: Bump Version
-        run: bumpversion patch --verbose
+        run: git tag --sort=committerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --current-version {} patch --verbose
 
       - name: Build source code
         run: python -m build --sdist --wheel --outdir dist/
