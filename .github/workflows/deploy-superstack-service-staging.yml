@@ -77,13 +77,13 @@ jobs:
         aws ecs describe-task-definition --task-definition ${{ inputs.service_name }}-staging --query taskDefinition > task-definition.json
 
     - name: Update task definition
-        uses: fjogeleit/yaml-update-action@master
-        with:
-          valueFile: task-definition.json
-          propertyPath: 'file.version'
-          value: v1.0.1
-          commitChange: false
-          updateFile: true
+      uses: fjogeleit/yaml-update-action@master
+      with:
+        valueFile: task-definition.json
+        propertyPath: 'file.version'
+        value: v1.0.1
+        commitChange: false
+        updateFile: true
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
