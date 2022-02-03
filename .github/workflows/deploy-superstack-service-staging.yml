@@ -38,6 +38,8 @@ on:
         required: true
       SUPERSTACK_SERVICE_TOKEN:
         required: true
+      PIP_INDEX_URL:
+        required: true
 
 jobs:
   deploy:
