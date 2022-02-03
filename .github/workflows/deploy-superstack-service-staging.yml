@@ -44,10 +44,11 @@ jobs:
     environment: production
 
     steps:    
-    - name: Checkout tools repo
+    - name: Checkout Service
       uses: actions/checkout@v2
       with:
         repository: superstack-dev/superstack-service
+        ref: staging
 
     - name: Checkout
       uses: actions/checkout@v2
