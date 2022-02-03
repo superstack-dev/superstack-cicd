@@ -102,6 +102,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ inputs.service_name }}
+        service: ${{ inputs.service_name }}-staging
         cluster: sourcing-staging
         wait-for-service-stability: true
