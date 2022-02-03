@@ -75,7 +75,7 @@ jobs:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: ${{ inputs.service_name }}-staging
         IMAGE_TAG: ${{ github.sha }}
-        PIP_INDEX_URL: ${{ secrets.PYPI_URL }}
+        PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
       run: |
         # Build a docker container and
         # push it to ECR so that it can
