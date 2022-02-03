@@ -52,10 +52,11 @@ jobs:
         repository: superstack-dev/superstack-service
         ref: staging
         token: ${{ secrets.SUPERSTACK_SERVICE_TOKEN }}
-        path: ${{ github.workspace }}
 
     - name: Checkout
       uses: actions/checkout@v2
+      with:
+        path: "package"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
