@@ -28,13 +28,13 @@ name: Deploy Service to Amazon ECS
 on:
   workflow_call:
     inputs:
-      service-name:
+      service_name:
           required: true
           type: string
     secrets:
-      aws-access-key-id:
+      AWS_ACCESS_KEY_ID:
         required: true
-      aws-secret-access-key:
+      AWS_SECRET_ACCESS_KEY:
         required: true
 
 jobs:
@@ -50,8 +50,8 @@ jobs:
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        aws-access-key-id: ${{ secrets.aws-access-key-id }}
-        aws-secret-access-key: ${{ secrets.aws-secret-access-key }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: eu-central-1
 
     - name: Login to Amazon ECR
@@ -62,7 +62,7 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.service-name }}-staging
+        ECR_REPOSITORY: ${{ inputs.service_name }}-staging
         IMAGE_TAG: ${{ github.sha }}
       run: |
         # Build a docker container and
@@ -74,7 +74,7 @@ jobs:
 
     - name: Download task definition
       run: |
-        aws ecs describe-task-definition --task-definition ${{ inputs.service-name }}-staging --query taskDefinition > task-definition.json
+        aws ecs describe-task-definition --task-definition ${{ inputs.service_name }}-staging --query taskDefinition > task-definition.json
 
     - name: Update task definition
       uses: fjogeleit/yaml-update-action@master
@@ -97,6 +97,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ inputs.service-name }}
+        service: ${{ inputs.service_name }}
         cluster: sourcing-staging
         wait-for-service-stability: true
