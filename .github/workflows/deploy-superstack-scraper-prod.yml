@@ -75,7 +75,7 @@ jobs:
       id: build-image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: ${{ inputs.service_name }}-staging
+        ECR_REPOSITORY: ${{ inputs.service_name }}-prod
         IMAGE_TAG: ${{ github.sha }}
         PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
       run: |
@@ -83,13 +83,13 @@ jobs:
         # push it to ECR so that it can
         # be deployed to ECS.
         cp ./scraper/requirements.txt .
-        docker build --build-arg PIP_INDEX_URL --build-arg PIP_ARGS="--pre" -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+        docker build --build-arg PIP_INDEX_URL --build-arg -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
         echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
 
     - name: Download task definition
       run: |
-        aws ecs describe-task-definition --task-definition ${{ inputs.service_name }}-staging --query taskDefinition > task-definition.json
+        aws ecs describe-task-definition --task-definition ${{ inputs.service_name }}-prod --query taskDefinition > task-definition.json
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
@@ -103,6 +103,6 @@ jobs:
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ inputs.service_name }}-staging
-        cluster: sourcing-staging
+        service: ${{ inputs.service_name }}-prod
+        cluster: sourcing-prod
         wait-for-service-stability: true
