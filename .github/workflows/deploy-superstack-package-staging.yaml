@@ -1,0 +1,49 @@
+on:
+  workflow_call:
+    secrets:
+      PYPI_TOKEN:
+        required: true
+      PYPI_UPLOAD_URL:
+        required: true
+
+name: Deploy Pre-Release
+
+jobs:
+  deploy:
+    name: Deploy to SuperStack Pypi
+    runs-on: ubuntu-latest
+    environment: staging
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install Deploy Packages
+        run: pip install -U bumpversion build
+
+      - name: Set Current Version
+        run: git tag --sort=committerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --new-version  {}
+
+      - name: Bump Version
+        run: git tag --sort=committerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --current-version {} patch --verbose
+
+      - name: Build source code
+        run: python -m build --sdist --wheel --outdir dist/
+
+      - name: Publish to PyPi
+        uses: pypa/gh-action-pypi-publish@master
+        with:
+          user: __github__
+          password: ${{ secrets.PYPI_TOKEN }}
+          repository_url: ${{ secrets.PYPI_UPLOAD_URL }}
+          verbose: true
+
+      - name: Push Git Tags
+        run: git push origin --tags
