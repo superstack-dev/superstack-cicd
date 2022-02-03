@@ -23,11 +23,7 @@
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
 
-on:
-  push:
-    branches: [$default-branch]
-
-name: Deploy to Amazon ECS
+name: Deploy Service to Amazon ECS
 
 jobs:
   deploy:
