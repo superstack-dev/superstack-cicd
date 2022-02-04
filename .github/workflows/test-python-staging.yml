@@ -32,4 +32,5 @@ jobs:
           pip install --pre -r test-requirements.txt
 
       - name: Run Tests
-        run: python -m pytest .
+        if: hashFiles('tests/__init__.py') != ''
+        run: python -m pytest tests/
