@@ -28,8 +28,8 @@ jobs:
         env:
           PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
-          pip install --pre -r requirments.txt
-          pip install --pre -r test-requirments.txt
+          pip install -r requirments.txt
+          pip install -r test-requirments.txt
 
       - name: Run Tests
         run: python -m pytest .
