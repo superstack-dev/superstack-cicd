@@ -75,8 +75,8 @@ jobs:
       id: build-image
       uses: docker/build-push-action@v2
       with:
-        context: $GITHUB_WORKSPACE/scraper
-        file: $GITHUB_WORKSPACE/Dockerfile
+        context: ${{ github.workspace }}/scraper
+        file: ${{ github.workspace }}/Dockerfile
         push: true
         tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}-prod:${{ github.sha }}
         build-args: |
