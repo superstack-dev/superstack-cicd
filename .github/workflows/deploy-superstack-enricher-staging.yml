@@ -58,7 +58,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
       with:
-        path: "package"
+        path: "enricher/package"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -75,13 +75,13 @@ jobs:
       id: build-image
       uses: docker/build-push-action@v2
       with:
-        context: $GITHUB_WORKSPACE/enricher
-        file: $GITHUB_WORKSPACE/Dockerfile
+        context: ${{ github.workspace }}/enricher
+        file: ${{ github.workspace }}/Dockerfile
         push: true
-        tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}-prod:${{ github.sha }}
-        build-args:
-          PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
-          PIP_ARGS: --pre
+        tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}-staging:${{ github.sha }}
+        build-args: |
+          PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
+          PIP_ARGS=--pre
 
     - name: Download task definition
       run: |
@@ -93,7 +93,7 @@ jobs:
       with:
         task-definition: task-definition.json
         container-name: service-runner
-        image: ${{ steps.build-image.outputs.image }}
+        image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}-staging:${{ github.sha }}
 
     - name: Deploy Amazon ECS task definition
       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
