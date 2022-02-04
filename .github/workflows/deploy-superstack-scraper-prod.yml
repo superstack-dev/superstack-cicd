@@ -79,8 +79,8 @@ jobs:
         file: $GITHUB_WORKSPACE/Dockerfile
         push: true
         tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}-prod:${{ github.sha }}
-      build-args:
-        PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
+        build-args:
+          PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
 
     - name: Download task definition
       run: |
