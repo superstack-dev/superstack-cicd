@@ -28,6 +28,7 @@ jobs:
         env:
           PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
+          ls -la
           pip install --pre -r requirments.txt
           pip install --pre -r test-requirments.txt
 
