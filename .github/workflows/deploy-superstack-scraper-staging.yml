@@ -58,7 +58,7 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v2
       with:
-        path: "package"
+        path: "scraper/package"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -78,7 +78,7 @@ jobs:
         context: ${{ github.workspace }}/scraper
         file: ${{ github.workspace }}/Dockerfile
         push: true
-        tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}-prod:${{ github.sha }}
+        tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}-staging:${{ github.sha }}
         build-args: |
           PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
           PIP_ARGS=--pre
