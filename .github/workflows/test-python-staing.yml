@@ -1,0 +1,35 @@
+name: Test Python Staging
+
+on:
+  workflow_call:
+    secrets:
+      PIP_INDEX_URL:
+        required: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install Pytest
+        run: pip install -U pytest
+
+      - name: Install Dependencies
+        env:
+          PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
+        run: |
+          pip install --pre -r requirments.txt
+          pip install --pre -r test-requirments.txt
+
+      - name: Run Tests
+        run: python -m pytest .
