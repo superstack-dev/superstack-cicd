@@ -29,7 +29,7 @@ jobs:
           PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
           pip install -r requirements.txt
-          [ -f test-requirements.txt ] && pip install -r test-requirements.txt
+          [ -f test-requirements.txt ] && pip install -r test-requirements.txt || true
 
       - name: Run Tests
         if: hashFiles('tests/__init__.py') != ''
