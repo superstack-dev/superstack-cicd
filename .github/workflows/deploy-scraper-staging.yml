@@ -86,7 +86,7 @@ jobs:
             PIP_ARGS=--pre
 
       - name: deploy to cluster
-        uses: steebchen/kubectl@v2.0.0
+        uses: kodermax/kubectl-aws-eks@master
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -96,16 +96,14 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          config: ${{ secrets.KUBE_CONFIG_STAGING }}
-          command: set image deployment/$DP_NAME $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          args: set image deployment/$DP_NAME $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: verify deployment
-        uses: steebchen/kubectl@v2.0.0
+        uses: kodermax/kubectl-aws-eks@master
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
           DP_NAME: ${{ inputs.service_name }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          config: ${{ secrets.KUBE_CONFIG_STAGING }}
-          command: rollout status deployment/$DP_NAME
+          args: rollout status deployment/$DP_NAME
