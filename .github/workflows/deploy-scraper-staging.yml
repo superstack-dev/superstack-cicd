@@ -84,9 +84,9 @@ jobs:
             PIP_ARGS=--pre
 
       - name: deploy to cluster
-        uses: kodermax/kubectl-aws-eks@master
+        uses: actions-hub/kubectl@master
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_STAGING }}
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ inputs.service_name }}-staging
           IMAGE_TAG: ${{ github.sha }}
@@ -95,9 +95,9 @@ jobs:
           args: set image deployment/$DP_NAME $ECR_REPOSITORY=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
       - name: verify deployment
-        uses: kodermax/kubectl-aws-eks@master
+        uses: actions-hub/kubectl@master
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+          KUBE_CONFIG: ${{ secrets.KUBE_CONFIG_STAGING }}
           DP_NAME: ${{ inputs.service_name }}
         with:
           args: rollout status deployment/$DP_NAME
