@@ -40,6 +40,8 @@ on:
         required: true
       PIP_INDEX_URL:
         required: true
+      KUBE_CONFIG_STAGING:
+        required: true
 
 jobs:
   deploy:
