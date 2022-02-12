@@ -94,7 +94,7 @@ jobs:
           IMAGE_NAME: ${{ inputs.service_name }}-staging
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          jf rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
+          jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
 
       - name: deploy to cluster
         uses: kodermax/kubectl-aws-eks@master
