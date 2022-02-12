@@ -31,9 +31,6 @@ on:
       service_name:
         required: true
         type: string
-      cluster:
-        required: true
-        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
