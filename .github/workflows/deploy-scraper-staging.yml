@@ -101,7 +101,7 @@ jobs:
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-          IMAGE_NAME: ${{ secrets.IMAGE_NAME }}-staging
+          IMAGE_NAME: ${{ inputs.service_name }}-staging
           IMAGE_TAG: ${{ github.sha }}
           DP_NAME: ${{ inputs.service_name }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
