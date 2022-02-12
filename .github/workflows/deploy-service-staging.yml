@@ -29,17 +29,23 @@ on:
   workflow_call:
     inputs:
       service_name:
-          required: true
-          type: string
+        required: true
+        type: string
       cluster:
-          required: true
-          type: string
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
       PIP_INDEX_URL:
+        required: true
+      KUBE_CONFIG_STAGING:
+        required: true
+      JF_ARTIFACTORY_SECRET_1:
+        required: true
+      SUPERSTACK_DOCKER_REGISTRY:
         required: true
 
 jobs:
@@ -48,47 +54,57 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
 
-    steps:    
-    - name: Checkout
-      uses: actions/checkout@v2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-central-1
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
 
-    - name: Login to Amazon ECR
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
+      - name: Build and tag image
+        id: build-image
+        uses: docker/build-push-action@v2
+        with:
+          context: ${{ github.workspace }}/scraper
+          file: ${{ github.workspace }}/Dockerfile
+          push: false
+          tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-staging:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-staging:latest
+          build-args: |
+            PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
+            PIP_ARGS=--pre
 
-    - name: Build, tag, and push image to Amazon ECR
-      id: build-image
-      uses: docker/build-push-action@v2
-      with:
-        push: true
-        tags: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}:${{ github.sha }}
-        build-args: |
-          PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
-          PIP_ARGS=--pre
+      - uses: jfrog/setup-jfrog-cli@v2
+        env:
+          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
 
-    - name: Download task definition
-      run: |
-        aws ecs describe-task-definition --task-definition ${{ inputs.service_name }} --query taskDefinition > task-definition.json
+      - env:
+          SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
+          IMAGE_NAME: ${{ inputs.service_name }}-staging
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
+          jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
 
-    - name: Fill in the new image ID in the Amazon ECS task definition
-      id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: service-runner
-        image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.service_name }}:${{ github.sha }}
+      - name: deploy to cluster
+        uses: kodermax/kubectl-aws-eks@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+          DP_NAME: ${{ inputs.service_name }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          args: rollout restart deployment/$DP_NAME
 
-    - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-      with:
-        task-definition: ${{ steps.task-def.outputs.task-definition }}
-        service: ${{ inputs.service_name }}
-        cluster: ${{ inputs.cluster }}
-        wait-for-service-stability: true
+      - name: verify deployment
+        uses: kodermax/kubectl-aws-eks@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+          DP_NAME: ${{ inputs.service_name }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        with:
+          args: rollout status deployment/$DP_NAME
