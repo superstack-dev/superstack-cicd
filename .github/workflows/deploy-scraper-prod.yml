@@ -103,7 +103,7 @@ jobs:
       - name: deploy to cluster
         uses: kodermax/kubectl-aws-eks@master
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.PRODUCTION }}
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
           IMAGE_NAME: ${{ inputs.service_name }}-production
           IMAGE_TAG: ${{ github.sha }}
