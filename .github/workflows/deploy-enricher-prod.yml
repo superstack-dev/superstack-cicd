@@ -80,7 +80,7 @@ jobs:
           context: ${{ github.workspace }}/enricher
           file: ${{ github.workspace }}/Dockerfile
           push: false
-          tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-production:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-production:latest
+          tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-prod:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-prod:latest
           build-args: |
             PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
             PIP_ARGS=--pre
@@ -91,7 +91,7 @@ jobs:
 
       - env:
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-          IMAGE_NAME: ${{ inputs.service_name }}-production
+          IMAGE_NAME: ${{ inputs.service_name }}-prod
           IMAGE_TAG: ${{ github.sha }}
         run: |
           jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
