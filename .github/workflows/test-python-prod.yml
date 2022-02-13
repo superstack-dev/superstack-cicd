@@ -28,7 +28,7 @@ jobs:
         env:
           PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
-          pip install -r requirements.txt
+          pip install --pre -r requirements.txt
           [ -f test-requirements.txt ] && pip --pre install -r test-requirements.txt || true
 
       - name: Run Tests
