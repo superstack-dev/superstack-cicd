@@ -49,6 +49,7 @@ jobs:
           tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-prod:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-prod:latest
           build-args: |
             PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
+            PIP_ARGS=--pre
 
       - uses: jfrog/setup-jfrog-cli@v2
         env:
