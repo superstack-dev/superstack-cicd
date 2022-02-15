@@ -41,15 +41,17 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and tag image
-        id: build-image
-        uses: docker/build-push-action@v2
+      - name: Setup and Build
+        id: build_image
+        uses: redhat-actions/s2i-build@v2
         with:
-          push: false
-          tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-prod:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-prod:latest
-          build-args: |
+          path_context: '.'
+          builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/superstack-runner-          image: ${{ inputs.service_name }}-prod
+:latest
+          image: ${{ inputs.service_name }}-prod
+          tags: ${{ github.sha }} latest
+          env_vars: |
             PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
-            PIP_ARGS=--pre
 
       - uses: jfrog/setup-jfrog-cli@v2
         env:

@@ -11,8 +11,6 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      SUPERSTACK_SERVICE_TOKEN:
-        required: true
       PIP_INDEX_URL:
         required: true
       KUBE_CONFIG_STAGING:
@@ -29,17 +27,8 @@ jobs:
     environment: staging
 
     steps:
-      - name: Checkout Service
-        uses: actions/checkout@v2
-        with:
-          repository: superstack-dev/superstack-runner
-          ref: staging
-          token: ${{ secrets.SUPERSTACK_SERVICE_TOKEN }}
-
       - name: Checkout
         uses: actions/checkout@v2
-        with:
-          path: "enricher/package"
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -48,17 +37,16 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-central-1
 
-      - name: Build and tag image
-        id: build-image
-        uses: docker/build-push-action@v2
+      - name: Setup and Build
+        id: build_image
+        uses: redhat-actions/s2i-build@v2
         with:
-          context: ${{ github.workspace }}/enricher
-          file: ${{ github.workspace }}/Dockerfile
-          push: false
-          tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-staging:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ inputs.service_name }}-staging:latest
-          build-args: |
+          path_context: '.'
+          builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/superstack-runner-staging:latest
+          image: ${{ inputs.service_name }}-staging
+          tags: ${{ github.sha }} latest
+          env_vars: |
             PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
-            PIP_ARGS=--pre
 
       - uses: jfrog/setup-jfrog-cli@v2
         env:
