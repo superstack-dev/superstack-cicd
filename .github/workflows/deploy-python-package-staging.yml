@@ -6,11 +6,11 @@ on:
       PYPI_UPLOAD_URL:
         required: true
 
-name: Deploy Pre-Release
+name: Deploy to SuperStack Pypi
 
 jobs:
   deploy:
-    name: Deploy to SuperStack Pypi
+    name: Deploy Pre-Release
     runs-on: ubuntu-latest
     environment: staging
 

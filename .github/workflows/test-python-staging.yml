@@ -1,4 +1,4 @@
-name: Test Python Staging
+name: Python Tests
 
 on:
   workflow_call:
@@ -8,9 +8,9 @@ on:
 
 jobs:
   test:
-    name: Test
+    name: Test Staging
     runs-on: ubuntu-latest
-    environment: production
+    environment: staging
 
     steps:
       - name: Checkout
