@@ -25,11 +25,11 @@ jobs:
     name: Deploy Staging
     runs-on: ubuntu-latest
     environment: staging
-    
-    steps:
-      env:
+    env:
       IMAGE_NAME: ${{ inputs.service_name }}-staging
       IMAGE_TAG: {{ github.sha }}
+    
+    steps:
       - name: Checkout
         uses: actions/checkout@v2
 
