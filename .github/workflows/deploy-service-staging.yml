@@ -49,7 +49,7 @@ jobs:
         with:
           path_context: '.'
           builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
-          image: $SUPERSTACK_DOCKER_REGISTRY/${{ env.IMAGE_NAME }}
+          image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
           env_vars: |
