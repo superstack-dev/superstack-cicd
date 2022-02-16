@@ -38,10 +38,10 @@ jobs:
         env:
           JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
 
-      - name: Pull Service Builder Image
+      - name: Pull Builder Image
         env: 
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-        run: jfrog rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/superstack-runner-staging:latest superstack-docker
+        run: jfrog rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/service-runner-staging:latest superstack-docker
 
       - name: Build
         id: build_image
