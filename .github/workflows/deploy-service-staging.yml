@@ -25,8 +25,11 @@ jobs:
     name: Deploy Staging
     runs-on: ubuntu-latest
     environment: staging
-
+    
     steps:
+      env:
+      IMAGE_NAME: ${{ inputs.service_name }}-staging
+      IMAGE_TAG: {{ github.sha }}
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -42,9 +45,9 @@ jobs:
         uses: redhat-actions/s2i-build@v2
         with:
           path_context: '.'
-          builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/superstack-runner-staging:latest
-          image: ${{ inputs.service_name }}-staging
-          tags: ${{ github.sha }} latest
+          builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
+          image: ${{ env.IMAGE_NAME }}
+          tags: ${{ env.IMAGE_TAG }} latest
           env_vars: |
             PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
 
@@ -54,8 +57,8 @@ jobs:
 
       - env:
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-          IMAGE_NAME: ${{ inputs.service_name }}-staging
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
           jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
           jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker

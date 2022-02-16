@@ -46,8 +46,7 @@ jobs:
         uses: redhat-actions/s2i-build@v2
         with:
           path_context: '.'
-          builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/superstack-runner-          image: ${{ inputs.service_name }}-prod
-:latest
+          builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-prod:latest
           image: ${{ inputs.service_name }}-prod
           tags: ${{ github.sha }} latest
           env_vars: |
