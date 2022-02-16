@@ -50,6 +50,7 @@ jobs:
           path_context: '.'
           builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
           image: ${{ env.IMAGE_NAME }}
+          log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
           env_vars: |
             PIP_INDEX_URL=${{secrets.PIP_INDEX_URL}}
