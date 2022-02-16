@@ -11,6 +11,8 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
+      PIP_INDEX_URL:
+        required: true
       KUBE_CONFIG_STAGING:
         required: true
       JF_ARTIFACTORY_SECRET_1:
@@ -49,6 +51,8 @@ jobs:
           builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAG }} latest
+          env_vars: |
+            PIP_INDEX_URL=${{secrets.PIP_INDEX_URL}}
 
       - name: Push Image
         env:
