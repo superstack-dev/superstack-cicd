@@ -11,8 +11,6 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      PIP_INDEX_URL:
-        required: true
       KUBE_CONFIG_STAGING:
         required: true
       JF_ARTIFACTORY_SECRET_1:
@@ -33,12 +31,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1
-        with:
-          registry: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-          username: __github__
-          password: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
+      - name: Setup JFrog
+        uses: jfrog/setup-jfrog-cli@v2
+        env:
+          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
+
+      - name: Pull Service Builder Image
+        env: 
+          SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
+        run: jf rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/superstack-runner-staging:latest superstack-docker
 
       - name: Setup and Build
         id: build_image
@@ -48,12 +49,6 @@ jobs:
           builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
           image: ${{ env.IMAGE_NAME }}
           tags: ${{ env.IMAGE_TAG }} latest
-          env_vars: |
-            PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
-
-      - uses: jfrog/setup-jfrog-cli@v2
-        env:
-          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
 
       - env:
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
