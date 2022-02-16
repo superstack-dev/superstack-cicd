@@ -41,7 +41,7 @@ jobs:
       - name: Pull Service Builder Image
         env: 
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-        run: jf rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/superstack-runner-staging:latest superstack-docker
+        run: jfrog rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/superstack-runner-staging:latest superstack-docker
 
       - name: Build
         id: build_image
