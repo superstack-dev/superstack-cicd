@@ -49,7 +49,7 @@ jobs:
         with:
           path_context: '.'
           builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
-          image: ${{ env.IMAGE_NAME }}
+          image: $SUPERSTACK_DOCKER_REGISTRY/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
           env_vars: |
@@ -61,8 +61,8 @@ jobs:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |
-          jfrog rt dp $IMAGE_NAME:$IMAGE_TAG superstack-docker
-          jfrog rt dp $IMAGE_NAME:latest superstack-docker
+          jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
+          jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
 
       - name: Deploy To Cluster
         uses: kodermax/kubectl-aws-eks@master
