@@ -28,38 +28,35 @@ jobs:
     env:
       IMAGE_NAME: ${{ inputs.service_name }}-prod
       IMAGE_TAG: ${{ github.sha }}
-
+    
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-central-1
+      - name: Setup JFrog
+        uses: jfrog/setup-jfrog-cli@v2
+        env:
+          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
+      - name: Pull Builder Image
+        env: 
+          SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
+        run: jfrog rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/service-runner-prod:latest superstack-docker
 
-      - name: Setup and Build
+      - name: Build
         id: build_image
         uses: redhat-actions/s2i-build@v2
         with:
           path_context: '.'
           builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-prod:latest
-          image: ${{ env.IMAGE_NAME }}
+          image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
           env_vars: |
-            PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
+            PIP_INDEX_URL=${{secrets.PIP_INDEX_URL}}
 
-      - uses: jfrog/setup-jfrog-cli@v2
+      - name: Push Image
         env:
-          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
-
-      - env:
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
@@ -67,7 +64,7 @@ jobs:
           jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
           jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
 
-      - name: deploy to cluster
+      - name: Deploy To Cluster
         uses: kodermax/kubectl-aws-eks@master
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
@@ -77,7 +74,7 @@ jobs:
         with:
           args: rollout restart deployment/$DP_NAME
 
-      - name: verify deployment
+      - name: Verify Deployment
         uses: kodermax/kubectl-aws-eks@master
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_PRODUCTION }}
