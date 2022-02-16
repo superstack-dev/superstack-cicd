@@ -27,7 +27,7 @@ jobs:
     environment: production
     env:
       IMAGE_NAME: ${{ inputs.service_name }}-prod
-      IMAGE_TAG: {{ github.sha }}
+      IMAGE_TAG: ${{ github.sha }}
 
     steps:
       - name: Checkout

@@ -27,7 +27,7 @@ jobs:
     environment: staging
     env:
       IMAGE_NAME: ${{ inputs.service_name }}-staging
-      IMAGE_TAG: {{ github.sha }}
+      IMAGE_TAG: ${{ github.sha }}
     
     steps:
       - name: Checkout
