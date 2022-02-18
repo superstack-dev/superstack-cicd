@@ -59,10 +59,7 @@ jobs:
         env:
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          IMAGE_TAG: ${{ env.IMAGE_TAG }}
-        run: |
-          jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG superstack-docker
-          jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
+        run: jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
 
       - name: Deploy To Cluster
         uses: kodermax/kubectl-aws-eks@master
