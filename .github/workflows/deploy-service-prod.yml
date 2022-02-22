@@ -6,6 +6,10 @@ on:
       service_name:
         required: true
         type: string
+      namespace:
+        required: false
+        default: ""
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -65,7 +69,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          args: rollout restart deployment/$DP_NAME
+          args: rollout restart deployment/$DP_NAME --namespace=${{ inputs.namespace }}
 
       - name: Verify Deployment
         uses: kodermax/kubectl-aws-eks@master
@@ -75,4 +79,4 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
-          args: rollout status deployment/$DP_NAME
+          args: rollout status deployment/$DP_NAME --namespace=${{ inputs.namespace }}
