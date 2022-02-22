@@ -11,8 +11,6 @@ on:
         required: true
       AWS_SECRET_ACCESS_KEY:
         required: true
-      PIP_INDEX_URL:
-        required: true
       KUBE_CONFIG:
         required: true
       JF_ARTIFACTORY_SECRET:
@@ -52,8 +50,6 @@ jobs:
           image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
-          env_vars: |
-            PIP_INDEX_URL=${{secrets.PIP_INDEX_URL}}
 
       - name: Push Image
         env:
