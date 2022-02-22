@@ -26,9 +26,9 @@ jobs:
 
       - name: Install Dependencies
         env:
-          PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
+          PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL_STAGING }}
         run: |
-          pip install --pre -r requirements.txt
+          pip install -r requirements.txt
           [ -f test-requirements.txt ] && pip install -r test-requirements.txt || true
 
       - name: Run Tests

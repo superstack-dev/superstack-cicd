@@ -13,9 +13,9 @@ on:
         required: true
       PIP_INDEX_URL:
         required: true
-      KUBE_CONFIG_STAGING:
+      KUBE_CONFIG:
         required: true
-      JF_ARTIFACTORY_SECRET_1:
+      JF_ARTIFACTORY_SECRET:
         required: true
       SUPERSTACK_DOCKER_REGISTRY:
         required: true
@@ -36,7 +36,7 @@ jobs:
       - name: Setup JFrog
         uses: jfrog/setup-jfrog-cli@v2
         env:
-          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET_1 }}
+          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET }}
 
       - name: Pull Builder Image
         env: 
@@ -64,7 +64,7 @@ jobs:
       - name: Deploy To Cluster
         uses: kodermax/kubectl-aws-eks@master
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
           DP_NAME: ${{ inputs.service_name }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -74,7 +74,7 @@ jobs:
       - name: Verify Deployment
         uses: kodermax/kubectl-aws-eks@master
         env:
-          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG_STAGING }}
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
           DP_NAME: ${{ inputs.service_name }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
