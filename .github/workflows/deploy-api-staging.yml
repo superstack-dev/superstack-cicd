@@ -21,6 +21,8 @@ on:
         required: true
       SUPERSTACK_DOCKER_REGISTRY:
         required: true
+      PIP_INDEX_URL:
+        required: true
 
 jobs:
   deploy:
@@ -45,6 +47,8 @@ jobs:
         with:
           push: false
           tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
 
       - name: Push Image
         env:
