@@ -40,15 +40,11 @@ jobs:
         env:
           JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET }}
 
-      - name: Build
-        id: build_image
-        uses: redhat-actions/s2i-build@v2
+      - name: Build Image
+        uses: docker/build-push-action@v2
         with:
-          path_context: "."
-          builder_image: centos/python-38-centos7
-          image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
-          log_level: 5
-          tags: ${{ env.IMAGE_TAG }} latest
+          push: false
+          tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Push Image
         env:
