@@ -8,7 +8,7 @@ on:
         type: string
       namespace:
         required: false
-        default: ""
+        default: default
         type: string
     secrets:
       AWS_ACCESS_KEY_ID:
@@ -30,7 +30,7 @@ jobs:
     env:
       IMAGE_NAME: ${{ inputs.service_name }}-staging
       IMAGE_TAG: ${{ github.sha }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -41,7 +41,7 @@ jobs:
           JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET }}
 
       - name: Pull Builder Image
-        env: 
+        env:
           SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
         run: jfrog rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/service-runner-staging:latest superstack-docker
 
@@ -49,7 +49,7 @@ jobs:
         id: build_image
         uses: redhat-actions/s2i-build@v2
         with:
-          path_context: '.'
+          path_context: "."
           builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
           image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
           log_level: 5
