@@ -1,4 +1,4 @@
-name: Deploy API Staging
+name: Deploy API Prod
 
 on:
   workflow_call:
@@ -26,11 +26,11 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Staging
+    name: Deploy Production
     runs-on: ubuntu-latest
-    environment: staging
+    environment: production
     env:
-      IMAGE_NAME: ${{ inputs.service_name }}-staging
+      IMAGE_NAME: ${{ inputs.service_name }}-prod
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
