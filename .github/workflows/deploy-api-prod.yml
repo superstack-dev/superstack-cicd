@@ -22,7 +22,7 @@ on:
       SUPERSTACK_DOCKER_REGISTRY:
         required: true
       PIP_INDEX_URL:
-        required: true
+        required: false
 
 jobs:
   deploy:
