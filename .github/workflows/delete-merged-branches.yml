@@ -1,0 +1,28 @@
+name: Delete Merged Branches
+
+on:
+  workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: master
+      - name: Setup Git
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git remote set-url --push origin https://github-actions[bot]:$GITHUB_TOKEN@github.com/${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: List And Delete Merged Branches
+        run: |
+          git branch -r --merged | grep -v '\*\|master\|main\|dev\|staging' | sed 's/origin\///'
+          echo "The above branches will be deleted from the remote"
+          git branch -r --merged | grep -v '\*\|master\|main\|dev\|staging' | sed 's/origin\///' | xargs -n 1 git push --delete origin
