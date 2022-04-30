@@ -1,10 +1,6 @@
 name: Delete Merged Branches
 
-on:
-  workflow_call:
-    secrets:
-      GITHUB_TOKEN:
-        required: true
+on: workflow_call
 
 jobs:
   build:
@@ -20,7 +16,7 @@ jobs:
           git config --local user.name "github-actions[bot]"
           git remote set-url --push origin https://github-actions[bot]:$GITHUB_TOKEN@github.com/${{ github.repository }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
       - name: List And Delete Merged Branches
         run: |
           branches=$(git branch -r --merged | grep -v '\*\|master\|main\|dev\|staging' | sed 's/origin\///')
