@@ -57,7 +57,7 @@ jobs:
         run: jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
 
       - name: Deploy To Cluster
-        uses: kodermax/kubectl-aws-eks@master
+        uses: GeekHunter-Brasil/kubectl-aws-eks@master
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
           DP_NAME: ${{ inputs.service_name }}
@@ -65,9 +65,10 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
           args: rollout restart deployment/$DP_NAME --namespace=${{ inputs.namespace }}
+          KUBECTL_VERSION: "v1.22.0"
 
       - name: Verify Deployment
-        uses: kodermax/kubectl-aws-eks@master
+        uses: GeekHunter-Brasil/kubectl-aws-eks@master
         env:
           KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
           DP_NAME: ${{ inputs.service_name }}
@@ -75,3 +76,4 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         with:
           args: rollout status deployment/$DP_NAME --namespace=${{ inputs.namespace }}
+          KUBECTL_VERSION: "v1.22.0"
