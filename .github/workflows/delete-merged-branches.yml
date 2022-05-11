@@ -1,0 +1,29 @@
+name: Delete Merged Branches
+
+on: workflow_call
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+          ref: master
+      - name: Setup Git
+        run: |
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git remote set-url --push origin https://github-actions[bot]:$GITHUB_TOKEN@github.com/${{ github.repository }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+      - name: List And Delete Merged Branches
+        run: |
+          branches=$(git branch -r --merged | grep -v '\*\|master\|main\|dev\|staging' | sed 's/origin\///')
+          if [[ -z ${branches} ]]; then
+            echo "no merged branches found for deletion."
+          else
+            printf '%s\n' "${branches}"
+            echo "The above branches will be deleted from the remote if their last commit is more than 1 week old."
+            printf '%s\n' "${branches}" | xargs -n 1 -I {} bash -c "if [ \$(git log -1 --since='1 week ago' -s origin/{} | wc -l) == 0 ]; then git push --delete origin {}; else echo 'Not deleting branch {} because its last commit is from less than 1 week ago'; fi"
+          fi

@@ -63,6 +63,7 @@ jobs:
           DP_NAME: ${{ inputs.service_name }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          KUBECTL_VERSION: "v1.22.0"
         with:
           args: rollout restart deployment/$DP_NAME --namespace=${{ inputs.namespace }}
 
@@ -73,5 +74,6 @@ jobs:
           DP_NAME: ${{ inputs.service_name }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          KUBECTL_VERSION: "v1.22.0"
         with:
           args: rollout status deployment/$DP_NAME --namespace=${{ inputs.namespace }}
