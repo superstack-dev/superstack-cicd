@@ -1,6 +1,9 @@
 on:
   workflow_call:
     inputs:
+      env:
+        required: true
+        type: string
       ecr_repository:
         required: true
         type: string
@@ -13,13 +16,13 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
-name: Deploy to AWS Lambda from ECR - Staging
+name: Deploy to AWS Lambda from ECR - ${{ inputs.env }}
 
 jobs:
   deploy:
-    name: Deploy To Staging
+    name: Deploy To ${{ inputs.env }}
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ inputs.env }}
 
     steps:
       - name: Checkout
@@ -46,7 +49,7 @@ jobs:
 
           # Build a docker container 
 
-          docker build --build-arg NODE_ENV=staging -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker build --build-arg NODE_ENV=${{ inputs.env }} -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
       - name: Push image to Amazon ECR
         id: push-to-ecr
