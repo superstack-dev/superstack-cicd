@@ -10,13 +10,12 @@ on:
       lambda_function_name:
         required: true
         type: string
-      pip_index_url:
-        required: true
-        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
       AWS_SECRET_ACCESS_KEY:
+        required: true
+      PIP_INDEX_URL:
         required: true
 
 name: Deploy to AWS Lambda from ECR
@@ -48,7 +47,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ inputs.ecr_repository }}
           IMAGE_TAG: ${{ github.sha }}
-          PIP_INDEX_URL: ${{ inputs.pip_index_url }}
+          PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
 
           # Build a docker container 
