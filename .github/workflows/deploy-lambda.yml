@@ -16,7 +16,7 @@ on:
       AWS_SECRET_ACCESS_KEY:
         required: true
 
-name: Deploy to AWS Lambda from ECR - ${{ inputs.env }}
+name: Deploy to AWS Lambda from ECR
 
 jobs:
   deploy:
