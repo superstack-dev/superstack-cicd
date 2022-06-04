@@ -10,6 +10,12 @@ on:
         required: false
         default: default
         type: string
+      env_full:
+        required: true
+        type: string
+      env_short:
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -20,12 +26,13 @@ on:
 
 jobs:
   deploy:
-    name: Deploy Staging
+    name: Deploy ${{ inputs.env_full }}
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ inputs.env_full }}
     env:
-      IMAGE_NAME: ${{ inputs.service_name }}-staging
+      IMAGE_NAME: ${{ inputs.service_name }}-${{ inputs.env_short }}
       IMAGE_TAG: ${{ github.sha }}
+      BUILDER_IMAGE_NAME: service-runner-${{ inputs.env_short }}
 
     steps:
       - name: Checkout
@@ -45,14 +52,14 @@ jobs:
       - name: Pull Builder Image
         env:
           SUPERSTACK_DOCKER_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        run: docker pull $SUPERSTACK_DOCKER_REGISTRY/service-runner-staging:latest
+        run: docker pull $SUPERSTACK_DOCKER_REGISTRY/$BUILDER_IMAGE_NAME:latest
 
       - name: Build
         id: build_image
         uses: redhat-actions/s2i-build@v2
         with:
           path_context: "."
-          builder_image: ${{ steps.login-ecr.outputs.registry }}/service-runner-staging:latest
+          builder_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.env.BUILDER_IMAGE_NAME }}:latest
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
