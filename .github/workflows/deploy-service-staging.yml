@@ -17,10 +17,6 @@ on:
         required: true
       KUBE_CONFIG:
         required: true
-      JF_ARTIFACTORY_SECRET:
-        required: true
-      SUPERSTACK_DOCKER_REGISTRY:
-        required: true
 
 jobs:
   deploy:
@@ -35,31 +31,49 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup JFrog
-        uses: jfrog/setup-jfrog-cli@v2
-        env:
-          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
       - name: Pull Builder Image
         env:
-          SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-        run: jfrog rt docker-pull $SUPERSTACK_DOCKER_REGISTRY/service-runner-staging:latest superstack-docker
+          SUPERSTACK_DOCKER_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker pull $SUPERSTACK_DOCKER_REGISTRY/service-runner-staging:latest
 
       - name: Build
         id: build_image
         uses: redhat-actions/s2i-build@v2
         with:
           path_context: "."
-          builder_image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/service-runner-staging:latest
-          image: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}
+          builder_image: ${{ steps.login-ecr.outputs.registry }}/service-runner-staging:latest
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
 
-      - name: Push Image
+      - name: Create ecr repo if it does not exist
+        id: create-ecr-repo-if-not-exists
         env:
-          SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-        run: jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
+          ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+        run: |
+          aws ecr create-repository --repository-name $IMAGE_NAME && aws ecr put-lifecycle-policy \
+            --repository-name $IMAGE_NAME \
+            --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"remove images when count of 10 is surpassed","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}' || true
+
+      - name: Push Image to Amazon ECR
+        id: push-to-ecr
+        env:
+          SUPERSTACK_DOCKER_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest
+          docker push $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          echo "::set-output name=image::$SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest"
 
       - name: Deploy To Cluster
         uses: kodermax/kubectl-aws-eks@master
