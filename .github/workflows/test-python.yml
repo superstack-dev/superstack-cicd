@@ -2,15 +2,19 @@ name: Python Tests
 
 on:
   workflow_call:
+    inputs:
+      env_full:
+        required: true
+        type: string
     secrets:
       PIP_INDEX_URL:
         required: true
 
 jobs:
   test:
-    name: Test Staging
+    name: Test ${{ inputs.env_full }}
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ inputs.env_full }}
 
     steps:
       - name: Checkout
@@ -29,7 +33,7 @@ jobs:
           PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
           pip install -r requirements.txt
-          [ -f test-requirements.txt ] && pip install -r test-requirements.txt || true
+          [ -f test-requirements.txt ] && pip xsinstall -r test-requirements.txt || true
 
       - name: Run Tests
         if: hashFiles('tests/__init__.py') != ''
