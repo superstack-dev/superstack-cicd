@@ -59,7 +59,7 @@ jobs:
         uses: redhat-actions/s2i-build@v2
         with:
           path_context: "."
-          builder_image: ${{ steps.login-ecr.outputs.registry }}/${{ inputs.env.BUILDER_IMAGE_NAME }}:latest
+          builder_image: ${{ steps.login-ecr.outputs.registry }}/${{ env.BUILDER_IMAGE_NAME }}:latest
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
