@@ -48,7 +48,7 @@ jobs:
           push: false
           tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
-            PIP_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
+            PIP_EXTRA_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
 
       - name: Push Image
         env:
