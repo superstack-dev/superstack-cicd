@@ -1,5 +1,12 @@
 on:
   workflow_call:
+    inputs:
+      env_full:
+        required: true
+        type: string
+      env_short:
+        required: false
+        type: string
     secrets:
       PYPI_TOKEN:
         required: true
@@ -12,7 +19,7 @@ jobs:
   deploy:
     name: Deploy Pre-Release
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ inputs.env_full }}
 
     steps:
       - name: Checkout

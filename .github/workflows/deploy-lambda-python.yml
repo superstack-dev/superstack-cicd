@@ -1,0 +1,74 @@
+on:
+  workflow_call:
+    inputs:
+      env:
+        required: true
+        type: string
+      ecr_repository:
+        required: true
+        type: string
+      lambda_function_name:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      PIP_INDEX_URL:
+        required: true
+
+name: Deploy to AWS Lambda from ECR
+
+jobs:
+  deploy:
+    name: Deploy To ${{ inputs.env }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build and tag image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+          IMAGE_TAG: ${{ github.sha }}
+          PIP_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
+        run: |
+
+          # Build a docker container 
+
+          docker build --build-arg PIP_INDEX_URL=$PIP_INDEX_URL -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+
+      - name: Push image to Amazon ECR
+        id: push-to-ecr
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ inputs.ecr_repository }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+
+          # push the built image to ECR so that it can
+          # be deployed to Lambda.
+
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - name: Deploy lambda function with new ECR image
+        id: update-lambda-function
+        run: |
+          aws lambda update-function-code --function-name ${{ inputs.lambda_function_name }} --image-uri ${{ steps.push-to-ecr.outputs.image }}

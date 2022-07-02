@@ -1,4 +1,4 @@
-name: Deploy API Staging
+name: Deploy API
 
 on:
   workflow_call:
@@ -10,6 +10,12 @@ on:
         required: false
         default: default
         type: string
+      env_full:
+        required: true
+        type: string
+      env_short:
+        required: true
+        type: string
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -17,44 +23,48 @@ on:
         required: true
       KUBE_CONFIG:
         required: true
-      JF_ARTIFACTORY_SECRET:
-        required: true
-      SUPERSTACK_DOCKER_REGISTRY:
-        required: true
       PIP_INDEX_URL:
         required: false
 
 jobs:
   deploy:
-    name: Deploy Staging
+    name: Deploy ${{ inputs.env_full }}
     runs-on: ubuntu-latest
-    environment: staging
+    environment: ${{ inputs.env_full }}
     env:
-      IMAGE_NAME: ${{ inputs.service_name }}-staging
+      IMAGE_NAME: ${{ inputs.service_name }}-${{ inputs.env_short }}
       IMAGE_TAG: ${{ github.sha }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Setup JFrog
-        uses: jfrog/setup-jfrog-cli@v2
-        env:
-          JF_ARTIFACTORY_1: ${{ secrets.JF_ARTIFACTORY_SECRET }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
 
-      - name: Build Image
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Create ecr repo if it does not exist
+        id: create-ecr-repo-if-not-exists
+        run: |
+          aws ecr create-repository --repository-name $IMAGE_NAME && aws ecr put-lifecycle-policy \
+            --repository-name $IMAGE_NAME \
+            --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"remove images when count of 10 is surpassed","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}' || true
+
+      - name: Build, tag and push image to ECR
+        id: build-image
         uses: docker/build-push-action@v2
         with:
-          push: false
-          tags: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }},${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ github.sha }},${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:latest
           build-args: |
             PIP_EXTRA_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
-
-      - name: Push Image
-        env:
-          SUPERSTACK_DOCKER_REGISTRY: ${{ secrets.SUPERSTACK_DOCKER_REGISTRY }}
-          IMAGE_NAME: ${{ env.IMAGE_NAME }}
-        run: jfrog rt dp $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest superstack-docker
 
       - name: Deploy To Cluster
         uses: kodermax/kubectl-aws-eks@master

@@ -2,15 +2,19 @@ name: Python Tests
 
 on:
   workflow_call:
+    inputs:
+      env_full:
+        required: true
+        type: string
     secrets:
       PIP_INDEX_URL:
         required: true
 
 jobs:
   test:
-    name: Test Production
+    name: Test ${{ inputs.env_full }}
     runs-on: ubuntu-latest
-    environment: production
+    environment: ${{ inputs.env_full }}
 
     steps:
       - name: Checkout

@@ -1,0 +1,103 @@
+name: Deploy Service
+
+on:
+  workflow_call:
+    inputs:
+      service_name:
+        required: true
+        type: string
+      namespace:
+        required: false
+        default: default
+        type: string
+      env_full:
+        required: true
+        type: string
+      env_short:
+        required: true
+        type: string
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      KUBE_CONFIG:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.env_full }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.env_full }}
+    env:
+      IMAGE_NAME: ${{ inputs.service_name }}-${{ inputs.env_short }}
+      IMAGE_TAG: ${{ github.sha }}
+      BUILDER_IMAGE_NAME: service-runner-${{ inputs.env_short }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Pull Builder Image
+        env:
+          SUPERSTACK_DOCKER_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker pull $SUPERSTACK_DOCKER_REGISTRY/$BUILDER_IMAGE_NAME:latest
+
+      - name: Build
+        id: build_image
+        uses: redhat-actions/s2i-build@v2
+        with:
+          path_context: "."
+          builder_image: ${{ steps.login-ecr.outputs.registry }}/${{ env.BUILDER_IMAGE_NAME }}:latest
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
+          log_level: 5
+          tags: ${{ env.IMAGE_TAG }} latest
+
+      - name: Create ecr repo if it does not exist
+        id: create-ecr-repo-if-not-exists
+        run: |
+          aws ecr create-repository --repository-name $IMAGE_NAME && aws ecr put-lifecycle-policy \
+            --repository-name $IMAGE_NAME \
+            --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"remove images when count of 10 is surpassed","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}' || true
+
+      - name: Push Image to Amazon ECR
+        id: push-to-ecr
+        env:
+          SUPERSTACK_DOCKER_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest
+          docker push $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          echo "::set-output name=image::$SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest"
+
+      - name: Deploy To Cluster
+        uses: kodermax/kubectl-aws-eks@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+          DP_NAME: ${{ inputs.service_name }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          KUBECTL_VERSION: "v1.22.0"
+        with:
+          args: rollout restart deployment/$DP_NAME --namespace=${{ inputs.namespace }}
+
+      - name: Verify Deployment
+        uses: kodermax/kubectl-aws-eks@master
+        env:
+          KUBE_CONFIG_DATA: ${{ secrets.KUBE_CONFIG }}
+          DP_NAME: ${{ inputs.service_name }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          KUBECTL_VERSION: "v1.22.0"
+        with:
+          args: rollout status deployment/$DP_NAME --namespace=${{ inputs.namespace }}
