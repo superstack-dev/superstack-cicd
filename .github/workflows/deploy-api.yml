@@ -16,6 +16,10 @@ on:
       env_short:
         required: true
         type: string
+      dockerfile:
+        required: false
+        type: string
+        default: 'Dockerfile'
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -61,6 +65,7 @@ jobs:
         id: build-image
         uses: docker/build-push-action@v2
         with:
+          file: $ {{ inputs.dockerfile }}
           push: true
           tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ github.sha }},${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:latest
           build-args: |

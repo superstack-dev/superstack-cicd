@@ -10,6 +10,10 @@ on:
       lambda_function_name:
         required: true
         type: string
+      dockerfile:
+        required: false
+        type: string
+        default: 'Dockerfile'
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -25,6 +29,9 @@ jobs:
     name: Deploy To ${{ inputs.env }}
     runs-on: ubuntu-latest
     environment: ${{ inputs.env }}
+    env:
+      IMAGE_NAME: ${{ inputs.ecr_repository }}
+      IMAGE_TAG: ${{ github.sha }}
 
     steps:
       - name: Checkout
@@ -41,34 +48,24 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build and tag image
+      - name: Create ecr repo if it does not exist
+        id: create-ecr-repo-if-not-exists
+        run: |
+          aws ecr create-repository --repository-name $IMAGE_NAME && aws ecr put-lifecycle-policy \
+            --repository-name $IMAGE_NAME \
+            --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"remove images when count of 10 is surpassed","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}' || true
+
+      - name: Build, tag and push image to ECR
         id: build-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ inputs.ecr_repository }}
-          IMAGE_TAG: ${{ github.sha }}
-          PIP_EXTRA_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
-        run: |
-
-          # Build a docker container 
-
-          docker build --build-arg PIP_EXTRA_INDEX_URL=$PIP_EXTRA_INDEX_URL -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-
-      - name: Push image to Amazon ECR
-        id: push-to-ecr
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ inputs.ecr_repository }}
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-
-          # push the built image to ECR so that it can
-          # be deployed to Lambda.
-
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+        uses: docker/build-push-action@v2
+        with:
+          file: $ {{ inputs.dockerfile }}
+          push: true
+          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }},${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            PIP_EXTRA_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
 
       - name: Deploy lambda function with new ECR image
         id: update-lambda-function
         run: |
-          aws lambda update-function-code --function-name ${{ inputs.lambda_function_name }} --image-uri ${{ steps.push-to-ecr.outputs.image }}
+          aws lambda update-function-code --function-name ${{ inputs.lambda_function_name }} --image-uri ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
