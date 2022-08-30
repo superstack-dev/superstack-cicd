@@ -59,7 +59,7 @@ jobs:
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
-          env_vars: PIP_EXTRA_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
+          env_vars: PIP_EXTRA_INDEX_URL=${{ secrets.PIP_INDEX_URL }},SERVICE_BASE_FUNCTION_NAME_ENV_NAME=SUPERSTACK_FUNCTION_NAME
 
       - name: Create ecr repo if it does not exist
         id: create-ecr-repo-if-not-exists
