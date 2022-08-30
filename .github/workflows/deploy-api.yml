@@ -27,6 +27,8 @@ on:
         required: true
       KUBE_CONFIG:
         required: true
+      PIP_INDEX_URL:
+        required: true
 
 jobs:
   deploy:
@@ -67,7 +69,7 @@ jobs:
           image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
           log_level: 5
           tags: ${{ env.IMAGE_TAG }} latest
-          env_vars: APP_MODULE=${{ inputs.app_module }}
+          env_vars: APP_MODULE=${{ inputs.app_module }},PIP_EXTRA_INDEX_URL=${{ inputs.PIP_INDEX_URL }}
 
       - name: Create ecr repo if it does not exist
         id: create-ecr-repo-if-not-exists
