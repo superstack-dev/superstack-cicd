@@ -16,10 +16,9 @@ on:
       env_short:
         required: true
         type: string
-      dockerfile:
-        required: false
+      app_module:
+        required: true
         type: string
-        default: 'Dockerfile'
     secrets:
       AWS_ACCESS_KEY_ID:
         required: true
@@ -27,8 +26,6 @@ on:
         required: true
       KUBE_CONFIG:
         required: true
-      PIP_INDEX_URL:
-        required: false
 
 jobs:
   deploy:
@@ -38,6 +35,7 @@ jobs:
     env:
       IMAGE_NAME: ${{ inputs.service_name }}-${{ inputs.env_short }}
       IMAGE_TAG: ${{ github.sha }}
+      BUILDER_IMAGE_NAME: app-runner-${{ inputs.env_short }}
 
     steps:
       - name: Checkout
@@ -54,6 +52,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
+      - name: Pull Builder Image
+        env:
+          SUPERSTACK_DOCKER_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: docker pull $SUPERSTACK_DOCKER_REGISTRY/$BUILDER_IMAGE_NAME:latest
+
+      - name: Build
+        id: build_image
+        uses: redhat-actions/s2i-build@v2
+        with:
+          path_context: "."
+          builder_image: ${{ steps.login-ecr.outputs.registry }}/${{ env.BUILDER_IMAGE_NAME }}:latest
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}
+          log_level: 5
+          tags: ${{ env.IMAGE_TAG }} latest
+          env_vars:
+            APP_MODULE: ${{ inputs.app_module }}
+
       - name: Create ecr repo if it does not exist
         id: create-ecr-repo-if-not-exists
         run: |
@@ -61,15 +76,14 @@ jobs:
             --repository-name $IMAGE_NAME \
             --lifecycle-policy-text '{"rules":[{"rulePriority":1,"description":"remove images when count of 10 is surpassed","selection":{"tagStatus":"any","countType":"imageCountMoreThan","countNumber":10},"action":{"type":"expire"}}]}' || true
 
-      - name: Build, tag and push image to ECR
-        id: build-image
-        uses: docker/build-push-action@v2
-        with:
-          file: ${{ inputs.dockerfile }}
-          push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:${{ github.sha }},${{ steps.login-ecr.outputs.registry }}/${{ env.IMAGE_NAME }}:latest
-          build-args: |
-            PIP_EXTRA_INDEX_URL=${{ secrets.PIP_INDEX_URL }}
+      - name: Push Image to Amazon ECR
+        id: push-to-ecr
+        env:
+          SUPERSTACK_DOCKER_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker push $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest
+          docker push $SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:$IMAGE_TAG
+          echo "::set-output name=image::$SUPERSTACK_DOCKER_REGISTRY/$IMAGE_NAME:latest"
 
       - name: Deploy To Cluster
         uses: kodermax/kubectl-aws-eks@master
