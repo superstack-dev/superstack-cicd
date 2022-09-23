@@ -43,7 +43,7 @@ jobs:
 
       - name: Bump Version
         run: |
-          if [ -n ${{ inputs.bump-type }}  ]
+          if [ -n "${{ inputs.bump-type }}"  ]
           then
             git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --current-version {} ${{ inputs.bump-type }} --verbose
           else
