@@ -60,6 +60,7 @@ jobs:
           password: ${{ secrets.PYPI_TOKEN }}
           repository_url: ${{ secrets.PYPI_UPLOAD_URL }}
           verbose: true
+          skip_existing: true
           verify_metadata: false
 
       - name: Push Git Tags
