@@ -16,11 +16,9 @@ on:
       PYPI_UPLOAD_URL:
         required: true
 
-name: Deploy to SuperStack Pypi
-
 jobs:
   deploy:
-    name: Deploy Pre-Release
+    name: Deploy to SuperStack Pypi
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
