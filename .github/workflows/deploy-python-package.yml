@@ -1,11 +1,21 @@
 on:
   workflow_call:
     inputs:
-      env_full:
+      environment:
         required: true
         type: string
-      env_short:
+      bump-type:
+        required: true
+        description: Bump Type
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: bugfix
+      override-version:
         required: false
+        description: If set will be used as the next version instead of the caclculated one
         type: string
     secrets:
       PYPI_TOKEN:
@@ -19,7 +29,7 @@ jobs:
   deploy:
     name: Deploy Pre-Release
     runs-on: ubuntu-latest
-    environment: ${{ inputs.env_full }}
+    environment: ${{ inputs.environment }}
 
     steps:
       - name: Checkout
@@ -41,7 +51,7 @@ jobs:
         run: pip install -U bumpversion build
 
       - name: Bump Version
-        run: git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --current-version {} patch --verbose
+        run: git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --current-version {} ${{ inputs.bump-type }} --verbose
 
       - name: Build source code
         run: python -m build --sdist --wheel --outdir dist/
