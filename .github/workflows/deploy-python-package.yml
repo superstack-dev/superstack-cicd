@@ -6,16 +6,9 @@ on:
         type: string
       bump-type:
         required: true
-        description: Bump Type
-        type: choice
-        options:
-          - patch
-          - minor
-          - major
-        default: bugfix
+        type: string
       override-version:
         required: false
-        description: If set will be used as the next version instead of the caclculated one
         type: string
     secrets:
       PYPI_TOKEN:
