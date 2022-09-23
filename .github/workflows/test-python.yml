@@ -36,11 +36,7 @@ jobs:
         env:
           PIP_EXTRA_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
-          if [[ ${{ inputs.use-prereleases }} == true ]]; then
-            pip install --pre -r requirements.txt
-          else
-            pip install -r requirements.txt
-          fi
+          [[ ${{ inputs.use-prereleases }} ]] && pip install --pre -r requirements.txt || pip install -r requirements.txt
           [ -f test-requirements.txt ] && pip install -r test-requirements.txt || true
 
       - name: Run Tests
