@@ -47,7 +47,7 @@ jobs:
           then
             git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --current-version {} ${{ inputs.bump-type }} --verbose
           else
-            git tag --sort=taggerdate --points-at HEAD | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --new-version {} fast-forward --verbose
+            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --new-version {} --current-version {} fast-forward --verbose
           fi
 
       - name: Build source code
