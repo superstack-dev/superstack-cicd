@@ -16,7 +16,7 @@ on:
 
 jobs:
   test:
-    name: Test ${{ inputs.environment }}
+    name: Test
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
