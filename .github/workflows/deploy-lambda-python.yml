@@ -28,7 +28,7 @@ jobs:
     env:
       IMAGE_NAME: ${{ inputs.ecr_repository }}
       IMAGE_TAG: ${{ github.sha }}
-      BUILDER_IMAGE_NAME: superstack-function-${{ inputs.env }}
+      BUILDER_IMAGE_NAME: function-runner-${{ inputs.env }}
 
     steps:
       - name: Checkout
