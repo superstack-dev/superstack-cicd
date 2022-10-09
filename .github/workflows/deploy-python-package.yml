@@ -4,12 +4,6 @@ on:
       environment:
         required: true
         type: string
-      bump-type:
-        required: false
-        type: string
-      override-version:
-        required: false
-        type: string
     secrets:
       PYPI_TOKEN:
         required: true
@@ -39,16 +33,11 @@ jobs:
           git config --local user.name "github-actions[bot]"
 
       - name: Install Deploy Packages
-        run: pip install -U bumpversion build
+        run: pip install -U bump2version build superstack-version-magaer
 
       - name: Bump Version
         run: |
-          if [ -n "${{ inputs.bump-type }}"  ]
-          then
-            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --current-version {} ${{ inputs.bump-type }} --verbose
-          else
-            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bumpversion --new-version {} --current-version {} fast-forward --verbose
-          fi
+          git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} version-manager -r {} -m "$(<VERSION)" | xargs -I {} bump2version --new-version {} --current-version "$(<VERSION)" fast-forward --verbose
 
       - name: Build source code
         run: python -m build --sdist --wheel --outdir dist/
