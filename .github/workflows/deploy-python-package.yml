@@ -4,16 +4,12 @@ on:
       environment:
         required: true
         type: string
-      bump-type:
-        required: false
-        type: string
-      override-version:
-        required: false
-        type: string
     secrets:
       PYPI_TOKEN:
         required: true
       PYPI_UPLOAD_URL:
+        required: true
+      GITHUB_TOKEN:
         required: true
 
 jobs:
@@ -38,16 +34,27 @@ jobs:
           git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
 
+      - uses: actions-ecosystem/action-get-merged-pull-request@v1
+        id: get-merged-pull-request
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - uses: actions-ecosystem/action-release-label@v1
+        id: release-label
+        if: ${{ steps.get-merged-pull-request.outputs.title != null }}
+        with:
+          labels: ${{ steps.get-merged-pull-request.outputs.labels }}
+
       - name: Install Deploy Packages
         run: pip install -U bump2version build
 
       - name: Bump Version
         run: |
-          if [ -n "${{ inputs.bump-type }}"  ]
+          if [ -n "${{ steps.release-label.outputs.level }}"  ]
           then
-            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bump2version --current-version {} ${{ inputs.bump-type }} --verbose
+            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bump2version --current-version {} ${{ steps.release-label.outputs.level }} --verbose
           else
-            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bump2version --new-version {} --current-version {} fast-forward --verbose
+            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bump2version --current-version {} patch --verbose
           fi
 
       - name: Build source code
