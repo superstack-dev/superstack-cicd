@@ -63,7 +63,7 @@ jobs:
               git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bump2version --current-version {} patch --verbose
             fi
           else
-            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bump2version --current-version {} --new-version {} fast-forward --verbose
+            git tag --sort=taggerdate | grep -E "v(.*)?" | tail -1 | xargs -I {} bump2version --current-version {} --new-version {} fast-forward --verbose --no-tag
           fi
 
       - name: Build source code
