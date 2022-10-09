@@ -6,10 +6,6 @@ on:
       environment:
         required: true
         type: string
-      use-prereleases:
-        required: false
-        default: false
-        type: boolean
     secrets:
       PIP_INDEX_URL:
         required: true
@@ -36,7 +32,7 @@ jobs:
         env:
           PIP_EXTRA_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
         run: |
-          [[ ${{ inputs.use-prereleases }} ]] && pip install --pre -r requirements.txt || pip install -r requirements.txt
+          pip install -r requirements.txt
           [ -f test-requirements.txt ] && pip install -r test-requirements.txt || true
 
       - name: Run Tests
