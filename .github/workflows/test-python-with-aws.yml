@@ -1,0 +1,47 @@
+name: Python Tests
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+    secrets:
+      PIP_INDEX_URL:
+        required: true
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-central-1
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+
+      - name: Install Pytest
+        run: pip install -U pytest
+
+      - name: Install Dependencies
+        env:
+          PIP_EXTRA_INDEX_URL: ${{ secrets.PIP_INDEX_URL }}
+        run: |
+          pip install -r requirements.txt
+          [ -f test-requirements.txt ] && pip install -r test-requirements.txt || true
+
+      - name: Run Tests
+        if: hashFiles('tests/__init__.py') != ''
+        run: python -m pytest tests/
